@@ -1,0 +1,53 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>JavaScript Basics Flash Cards</title>
+<style>
+:root{--bg:#f7f6f2;--card:#fff;--ink:#1f2328;--mut:#6b6f76;--line:#e2e0d8;--acc:#01696f;--ok:#2e7d32;--no:#b3261e}
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,Segoe UI,sans-serif;background:var(--bg);color:var(--ink)}
+main{max-width:720px;margin:0 auto;padding:24px 16px}
+h1{font-size:22px;margin:0 0 4px}.sub{color:var(--mut);font-size:14px;margin:0 0 16px}
+.top{display:flex;justify-content:space-between;font-size:14px;color:var(--mut);margin-bottom:8px;gap:8px;flex-wrap:wrap}
+.bar{height:6px;background:var(--line);border-radius:3px;overflow:hidden;margin-bottom:16px}.bar div{height:100%;background:var(--acc);transition:width .3s}
+.sc{perspective:1000px;height:320px;cursor:pointer}
+.card{position:relative;width:100%;height:100%;transition:transform .5s;transform-style:preserve-3d}.card.f{transform:rotateY(180deg)}
+.face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;background:var(--card);border:1px solid var(--line);border-radius:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center;gap:12px}
+.back{transform:rotateY(180deg);border-color:var(--acc)}
+.tag{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--acc);font-weight:600}
+.q{font-size:21px;font-weight:600;line-height:1.4}.a{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:16px;line-height:1.6}
+.hint{font-size:12px;color:var(--mut)}.mark{font-size:12px;color:var(--mut)}
+.btns{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:16px}
+button{font:inherit;font-size:15px;padding:10px 16px;border-radius:8px;border:1px solid var(--line);background:#fff;color:var(--ink);cursor:pointer}
+button:hover{border-color:var(--ink)}.ok{border-color:var(--ok);color:var(--ok)}.no{border-color:var(--no);color:var(--no)}
+.foot{margin-top:20px;font-size:13px;color:var(--mut);text-align:center}
+</style></head><body><main>
+<h1>JavaScript Basics</h1><p class="sub">Your progress saves automatically in this browser.</p>
+<div class="top"><span id="pos"></span><span id="score"></span></div>
+<div class="bar"><div id="pb"></div></div>
+<div class="sc" id="sc" role="button" tabindex="0" aria-label="Flip card"><div class="card" id="card">
+<div class="face"><div class="tag" id="t1"></div><div class="q" id="q"></div><div class="mark" id="mk"></div><div class="hint">Click or press Space to flip</div></div>
+<div class="face back"><div class="tag" id="t2"></div><div class="a" id="a"></div></div></div></div>
+<div class="btns"><button id="prev">← Back</button><button class="no" id="miss">Review again</button><button class="ok" id="got">Got it</button></div>
+<div class="btns"><button id="shuf">Shuffle and restart</button><button id="rev">Study missed only</button><button id="all">Study all</button><button id="reset">Reset progress</button></div>
+<p class="foot" id="foot">Keys: Space flips · → Got it · ← Review again</p>
+</main><script>
+const ALL=[["Variables","What are the three ways to declare a variable?","let (can change), const (can't be reassigned), var (older, avoid)"],["Variables","When should you use const instead of let?","When the value won't be reassigned. Use const by default."],["Types","What are the main primitive data types?","string, number, boolean, null, undefined, bigint, symbol"],["Types","Difference between null and undefined?","undefined = declared but no value yet. null = intentionally empty."],["Types","How do you check a value's type?","typeof value → typeof \"hi\" is \"string\""],["Operators","Difference between == and ===?","== converts types first (\"5\" == 5 is true). === checks value AND type. Use ===."],["Operators","What do &&, ||, and ! mean?","AND, OR, NOT"],["Operators","What does % do?","Gives the remainder. 10 % 3 is 1"],["Strings","What is a template literal?","A backtick string that holds variables: `Hi ${name}`"],["Control Flow","Write a basic if/else.","if (age >= 18) { ... } else { ... }"],["Control Flow","Write a for loop that counts 0 to 4.","for (let i = 0; i < 5; i++) { console.log(i); }"],["Control Flow","What does a while loop do?","Repeats as long as its condition is true."],["Control Flow","What are the falsy values?","false, 0, \"\", null, undefined, NaN"],["Functions","Write a function declaration.","function add(a, b) { return a + b; }"],["Functions","Write add as an arrow function.","const add = (a, b) => a + b;"],["Functions","What does return do?","Sends a value back and stops the function."],["Arrays","How do you add an item to the end of an array?","arr.push(item)"],["Arrays","How do you get an array's length?","arr.length (last item: arr[arr.length - 1])"],["Arrays","What does .map() do?","Makes a new array by changing each item. [1,2,3].map(n => n*2) → [2,4,6]"],["Objects","Create an object and read a property.","const user = { name: \"Bri\" }; user.name or user[\"name\"]"]];
+const KEY='jsBasicsFlashcards.v1';
+let S={order:ALL.map((_,k)=>k),i:0,status:{}};
+try{const d=JSON.parse(localStorage.getItem(KEY));if(d&&Array.isArray(d.order))S=d}catch(e){}
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
+const $=id=>document.getElementById(id),card=$('card');
+function counts(){let g=0,m=0;for(const v of Object.values(S.status)){v==='got'?g++:m++}return[g,m]}
+function show(){const[g,m]=counts();$('score').textContent='Got it: '+g+' of '+ALL.length+' · Review: '+m;card.classList.remove('f');
+if(S.i>=S.order.length){$('t1').textContent='Round complete';$('q').textContent='Nice work. Got it: '+g+' · Review: '+m;$('mk').textContent='';$('t2').textContent='Next step';$('a').textContent='Try "Study missed only" or "Shuffle and restart".';$('pos').textContent='Done';$('pb').style.width='100%';save();return}
+const k=S.order[S.i],c=ALL[k],st=S.status[k];$('t1').textContent=c[0];$('t2').textContent=c[0]+' · Answer';$('q').textContent=c[1];
+$('mk').textContent=st==='got'?'Last time: Got it':st==='miss'?'Last time: Review again':'';setTimeout(()=>{$('a').textContent=c[2]},150);
+$('pos').textContent='Card '+(S.i+1)+' of '+S.order.length;$('pb').style.width=((S.i+1)/S.order.length*100)+'%';save()}
+const flip=()=>card.classList.toggle('f');$('sc').onclick=flip;
+const mark=v=>{if(S.i<S.order.length){S.status[S.order[S.i]]=v;S.i++;show()}};
+$('got').onclick=()=>mark('got');$('miss').onclick=()=>mark('miss');$('prev').onclick=()=>{if(S.i>0){S.i--;show()}};
+$('shuf').onclick=()=>{S.order=ALL.map((_,k)=>k).sort(()=>Math.random()-.5);S.i=0;show()};
+$('all').onclick=()=>{S.order=ALL.map((_,k)=>k);S.i=0;show()};
+$('rev').onclick=()=>{const m=ALL.map((_,k)=>k).filter(k=>S.status[k]==='miss');if(!m.length){$('foot').textContent='No missed cards right now.';return}S.order=m;S.i=0;show()};
+$('reset').onclick=()=>{S={order:ALL.map((_,k)=>k),i:0,status:{}};show()};
+document.addEventListener('keydown',e=>{if(e.code==='Space'){e.preventDefault();flip()}else if(e.key==='ArrowRight')mark('got');else if(e.key==='ArrowLeft')mark('miss')});
+show();
+</script></body></html>
